@@ -1,10 +1,12 @@
 import tkinter as tk
+import staff_status from login
 
-class GymInterface:
+class GymInterface(staff_status):
     def __init__(self, root):
         self.root = root
         self.root.title("Staff Dashboard")
         self.root.geometry("500x500")
+        self.staff_status = staff_status
 
         self.button_add_member = tk.Button(root, text="Add Member", command=self.add_member)
         self.button_add_member.pack(pady=10)
@@ -18,6 +20,10 @@ class GymInterface:
         self.button_maintenance_logs = tk.Button(root, text="Maintenance Logs", command=self.maintenance_logs)
         self.button_maintenance_logs.pack(pady=10)
 
+        if self.staff_status == "Manager":
+            self.button_manage_staff = tk.Button(root, text="Manage Staff", command=self.manage_staff)
+            self.button_manage_staff.pack(pady=10)
+
     def add_member(self):
         pass
 
@@ -28,6 +34,9 @@ class GymInterface:
         pass
     
     def maintenance_logs(self):
+        pass
+
+    def manage_staff(self):
         pass
 
 
