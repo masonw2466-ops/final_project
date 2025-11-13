@@ -8,11 +8,7 @@ class GymInterface:
         self.root.title("Staff Dashboard")
         self.root.geometry("500x500")
 
-        # Lets employee add gym member
-        self.button_add_member = tk.Button(root, text="Add Member", command=self.add_member)
-        self.button_add_member.pack(pady=10)
-
-        # Lets staff edit member info
+        # Lets staff edit member info; add, edit, remove, etc.
         self.button_edit_member = tk.Button(root, text="Edit Member", command=self.edit_member)
         self.button_edit_member.pack(pady=10)
 
