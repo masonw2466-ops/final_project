@@ -59,7 +59,7 @@ class Login:
             # import and open main page
             import main_page
             root = tk.Tk()
-            main_page.GymInterface(root)
+            main_page.GymInterface(root, staff_status)
             root.mainloop()
 
         else:
