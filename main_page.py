@@ -1,12 +1,12 @@
 import tkinter as tk
-from login import staff_status
+from tkinter import messagebox
 
 class GymInterface:
-    def __init__(self, root):
+    def __init__(self, root, staff_status):
         self.root = root
+        self.staff_status = staff_status
         self.root.title("Staff Dashboard")
         self.root.geometry("500x500")
-        self.staff_status = staff_status
 
         # Lets employee add gym member
         self.button_add_member = tk.Button(root, text="Add Member", command=self.add_member)
@@ -29,6 +29,9 @@ class GymInterface:
             self.button_manage_staff = tk.Button(root, text="Manage Staff", command=self.manage_staff)
             self.button_manage_staff.pack(pady=10)
 
+        self.button_loggout = tk.Button(root, text="Loggout", command=self.loggout)
+        self.button_loggout.pack(pady=10)
+
     # Adds the method for adding members
     def add_member(self):
         pass
@@ -49,8 +52,18 @@ class GymInterface:
     def manage_staff(self):
         pass
 
+    def loggout(self):
+        messagebox.showinfo("Loggout Successful", "Loggout Successful")
+        self.root.destroy()
+
+        #Reloads the login page
+        import login
+        root = tk.Tk()
+        login.Login(root)
+        root.mainloop()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = GymInterface(root)
+    app = GymInterface(root, "Employee")
     root.mainloop()
