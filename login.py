@@ -1,4 +1,7 @@
 import tkinter as tk
+from tkinter import messagebox
+
+staff_status = None  
 
 class Login:
     def __init__(self, root):
@@ -23,7 +26,7 @@ class Login:
         self.entry_passcode.pack(pady=10)
 
         # Submits informaiton and calls a checker
-        self.button_submit = tk.Button(root, text="Submit", command="check_login")
+        self.button_submit = tk.Button(root, text="Submit", command=self.check_login)
         self.button_submit.pack(pady=10)
 
         # Left empty to start but will display message if done wrong
@@ -32,15 +35,37 @@ class Login:
 
     # Method for checking that the login exists
     def check_login(self):
-        employee_id = self.entry_id.get()
-        password = self.entry_passcode()
-        if (employee_id.strip()) or (password) == "":
-            self.label_output.config(text="Invalid ID or password")
-        
-        ''' Right here we want to add an if or 
-        omehting that will check if the id and 
-        password are in a dictionary or something
-        and then decide whether to send a value of 
-        manager or employee. Or should we add a 
-        database? It would also need to send them to
-        the main page'''
+        global staff_status
+
+        employee_id = self.entry_id.get().strip()
+        password = self.entry_passcode.get().strip()
+
+        # fake data: id -> {password, role}
+        staff_data = {
+            "001": {"password": "1234", "role": "Manager"},
+            "002": {"password": "abcd", "role": "Employee"},
+            "003": {"password": "pass", "role": "Employee"},
+        }
+
+        if employee_id == "" or password == "":
+            self.label_output.config(text="Please enter both ID and password.", fg="red")
+            return
+
+        if employee_id in staff_data and staff_data[employee_id]["password"] == password:
+            staff_status = staff_data[employee_id]["role"]
+            messagebox.showinfo("Login Successful", f"Welcome {staff_status}!")
+            self.root.destroy()
+
+            # import and open main page
+            import main_page
+            root = tk.Tk()
+            main_page.GymInterface(root)
+            root.mainloop()
+
+        else:
+            self.label_output.config(text="Invalid ID or password", fg="red")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = Login(root)
+    root.mainloop()

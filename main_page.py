@@ -1,7 +1,7 @@
 import tkinter as tk
-import staff_status from login
+from login import staff_status
 
-class GymInterface(staff_status):
+class GymInterface:
     def __init__(self, root):
         self.root = root
         self.root.title("Staff Dashboard")
