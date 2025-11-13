@@ -18,17 +18,17 @@ class GymInterface:
         self.button_maintenance_logs = tk.Button(root, text="Maintenance Logs", command=self.maintenance_logs)
         self.button_maintenance_logs.pack(pady=10)
 
-        def add_member(self):
-            pass
+    def add_member(self):
+        pass
 
-        def edit_member(self):
-            pass
-        
-        def class_schedule(self):
-            pass
-        
-        def maintenance_logs(self):
-            pass
+    def edit_member(self):
+        pass
+    
+    def class_schedule(self):
+        pass
+    
+    def maintenance_logs(self):
+        pass
 
 
 if __name__ == "__main__":
