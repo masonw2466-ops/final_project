@@ -9,7 +9,7 @@ class GymInterface:
         self.root.geometry("500x500")
 
         # Lets staff edit member info; add, edit, remove, etc.
-        self.button_edit_member = tk.Button(root, text="Edit Member", command=self.edit_member)
+        self.button_edit_member = tk.Button(root, text="Members", command=self.edit_member)
         self.button_edit_member.pack(pady=10)
 
         # Lets staff edit or see class schedule
@@ -28,13 +28,11 @@ class GymInterface:
         self.button_loggout = tk.Button(root, text="Loggout", command=self.loggout)
         self.button_loggout.pack(pady=10)
 
-    # Adds the method for adding members
-    def add_member(self):
-        pass
-
     # Adds method for editing members
     def edit_member(self):
-        pass
+        import members
+        new_window = tk.Toplevel(self.root)
+        members.Members(new_window)
     
     # Adds method for the class schedules
     def class_schedule(self):
