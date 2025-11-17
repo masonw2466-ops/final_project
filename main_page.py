@@ -36,7 +36,9 @@ class GymInterface:
     
     # Adds method for the class schedules
     def class_schedule(self):
-        pass
+        import schedules
+        new_window = tk.Toplevel(self.root)
+        schedules.Schedules(new_window)
     
     # Allows you to change and update maintenance logs
     def maintenance_logs(self):
@@ -44,7 +46,9 @@ class GymInterface:
 
     # Allows manager to add and fire staff
     def manage_staff(self):
-        pass
+        import staff
+        new_window = tk.Toplevel(self.root)
+        staff.Staff(new_window)
 
     def loggout(self):
         messagebox.showinfo("Loggout Successful", "Loggout Successful")
