@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import sqlite3
 
 staff_status = None  
 
@@ -9,8 +10,14 @@ class Login:
         self.root.title("Login")
         self.root.geometry("500x500")
 
+        self.staff_conn = sqlite3.connect("staff.db")
+        self.staff_cursor = self.staff_conn.cursor()
+
+        self.member_conn = sqlite3.connect("members.db")
+        self.member_cursor = self.member_conn.cursor()
+
         # Adds the prompt asking for ID
-        self.label_prompt_id = tk.Label(root, text="Enter Employee ID")
+        self.label_prompt_id = tk.Label(root, text="Enter Username or ID")
         self.label_prompt_id.pack(pady=10)
 
         # Adds the box to place ID
@@ -33,37 +40,59 @@ class Login:
         self.label_output = tk.Label(root, text="")
         self.label_output.pack(pady=10)
 
-    # Method for checking that the login exists
     def check_login(self):
         global staff_status
 
-        employee_id = self.entry_id.get().strip()
+        username = self.entry_id.get().strip()
         password = self.entry_passcode.get().strip()
 
-        # fake data: id -> {password, role}
-        staff_data = {
-            "001": {"password": "1234", "role": "Manager"},
-            "002": {"password": "abcd", "role": "Employee"},
-            "003": {"password": "pass", "role": "Employee"},
-        }
-
-        if employee_id == "" or password == "":
+        if username == "" or password == "":
             self.label_output.config(text="Please enter both ID and password.", fg="red")
             return
 
-        if employee_id in staff_data and staff_data[employee_id]["password"] == password:
-            staff_status = staff_data[employee_id]["role"]
+        # Check staff database
+        try:
+            self.staff_cursor.execute(
+                "SELECT role FROM staff WHERE username=? AND password=?",
+                (username, password)
+            )
+            staff_result = self.staff_cursor.fetchone()
+        except Exception as e:
+            self.label_output.config(text=f"Staff DB error: {e}", fg="red")
+            return
+
+        if staff_result:
+            staff_status = staff_result[0]
             messagebox.showinfo("Login Successful", f"Welcome {staff_status}!")
             self.root.destroy()
 
-            # import and open main page
             import main_page
             root = tk.Tk()
             main_page.GymInterface(root, staff_status)
             root.mainloop()
+            return
 
-        else:
-            self.label_output.config(text="Invalid ID or password", fg="red")
+        # Check member database
+        try:
+            self.member_cursor.execute(
+                "SELECT name FROM members WHERE username=? AND password=?",
+                (username, password)
+            )
+            member_result = self.member_cursor.fetchone()
+        except Exception as e:
+            self.label_output.config(text=f"Member DB error: {e}", fg="red")
+            return
+
+        if member_result:
+            member_name = member_result[0]
+            messagebox.showinfo("Login Successful", f"Welcome {member_name}!")
+            self.root.destroy()
+
+            # Placeholder for member portal
+            messagebox.showinfo("Member Page", "Member login successful. Member portal not yet implemented.")
+            return
+
+        self.label_output.config(text="Invalid ID or password", fg="red")
 
 if __name__ == "__main__":
     root = tk.Tk()

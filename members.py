@@ -17,7 +17,9 @@ class Members:
                 name TEXT NOT NULL,
                 phone TEXT NOT NULL,
                 email TEXT NOT NULL,
-                membership TEXT NOT NULL
+                membership TEXT NOT NULL,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL
             )
         """)
         self.conn.commit()
@@ -55,25 +57,33 @@ class AddWindow:
         self.win.title("Add Member")
         self.win.geometry("500x500")
 
-        tk.Label(self.win, text="Enter Member name:").pack(pady=10)
+        tk.Label(self.win, text="Enter Member name:").pack(pady=5)
         self.entry_name = tk.Entry(self.win)
         self.entry_name.pack(pady=5)
 
-        tk.Label(self.win, text="Enter Member phone").pack(pady=10)
+        tk.Label(self.win, text="Enter Member phone").pack(pady=5)
         self.entry_phone = tk.Entry(self.win)
         self.entry_phone.pack(pady=10)
 
-        tk.Label(self.win, text="Enter Member email").pack(pady=10)
+        tk.Label(self.win, text="Enter Member email").pack(pady=5)
         self.entry_email = tk.Entry(self.win)
         self.entry_email.pack(pady=10)
 
-        tk.Label(self.win, text="Select Membership Type").pack(pady=10)
+        tk.Label(self.win, text="Select Membership Type").pack(pady=5)
         self.membership_type = ttk.Combobox(
             self.win,
             values=["Basic", "Premium", "VIP", "Student", "Family"]
         )
         self.membership_type.pack(pady=5)
         # Find some sort of selector for this option
+
+        tk.Label(self.win, text="Enter Username").pack(pady=10)
+        self.entry_username = tk.Entry(self.win)
+        self.entry_username.pack(pady=5)
+
+        tk.Label(self.win, text="Enter Password").pack(pady=10)
+        self.entry_password = tk.Entry(self.win, show="*")
+        self.entry_password.pack(pady=5)
 
         tk.Button(self.win, text="Save",
                   command=self.save_member).pack(pady=5)
@@ -85,8 +95,10 @@ class AddWindow:
         phone = self.entry_phone.get()
         email = self.entry_email.get()
         membership = self.membership_type.get()
+        username = self.entry_username.get()
+        password = self.entry_password.get()
 
-        if not name or not phone or not email or not membership:
+        if not name or not phone or not email or not membership or not username or not password:
             messagebox.showerror("Error", "All fields must be filled out.")
             return
 
@@ -98,8 +110,8 @@ class AddWindow:
         conn = self.main_app.conn
         cursor = self.main_app.cursor
         cursor.execute(
-            "INSERT INTO members (name, phone, email, membership) VALUES (?, ?, ?, ?)",
-            (name, phone, email, membership)
+            "INSERT INTO members (name, phone, email, membership, username, password) VALUES (?, ?, ?, ?, ?, ?)",
+            (name, phone, email, membership, username, password)
         )
         conn.commit()
         self.win.destroy()
@@ -143,6 +155,14 @@ class EditWindow:
         )
         self.membership_type.pack()
 
+        tk.Label(self.win, text="Username").pack(pady=5)
+        self.entry_username = tk.Entry(self.win)
+        self.entry_username.pack()
+
+        tk.Label(self.win, text="Password").pack(pady=5)
+        self.entry_password = tk.Entry(self.win, show="*")
+        self.entry_password.pack()
+
         # Save Button
         tk.Button(self.win, text="Save Changes",
                   command=self.save_changes).pack(pady=15)
@@ -161,7 +181,7 @@ class EditWindow:
         member_id = selected.split(" - ")[0]
 
         cursor = self.main_app.cursor
-        cursor.execute("SELECT name, phone, email, membership FROM members WHERE id=?", (member_id,))
+        cursor.execute("SELECT name, phone, email, membership, username, password FROM members WHERE id=?", (member_id,))
         data = cursor.fetchone()
 
         if data:
@@ -176,18 +196,26 @@ class EditWindow:
             self.entry_email.insert(0, data[2])
             self.membership_type.set(data[3])
 
+            self.entry_username.delete(0, tk.END)
+            self.entry_username.insert(0, data[4])
+
+            self.entry_password.delete(0, tk.END)
+            self.entry_password.insert(0, data[5])
+
     def save_changes(self):
         name = self.entry_name.get()
         phone = self.entry_phone.get()
         email = self.entry_email.get()
         membership = self.membership_type.get()
+        username = self.entry_username.get()
+        password = self.entry_password.get()
 
         cursor = self.main_app.cursor
         cursor.execute("""
             UPDATE members
-            SET name=?, phone=?, email=?, membership=?
+            SET name=?, phone=?, email=?, membership=?, username=?, password=?
             WHERE id=?
-        """, (name, phone, email, membership, self.current_id))
+        """, (name, phone, email, membership, username, password, self.current_id))
 
         self.main_app.conn.commit()
         messagebox.showinfo("Success", "Member updated successfully!")
