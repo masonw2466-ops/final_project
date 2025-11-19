@@ -132,7 +132,7 @@ class EditWindow:
         # Load member list from DB
         self.load_member_list()
 
-        # When selecting a member → load into input fields
+        # When selecting a member, load into input fields
         self.member_dropdown.bind("<<ComboboxSelected>>", self.load_member_data)
 
         # Editable fields
@@ -163,7 +163,7 @@ class EditWindow:
         self.entry_password = tk.Entry(self.win, show="*")
         self.entry_password.pack()
 
-        # Save Button
+        # Save button
         tk.Button(self.win, text="Save Changes",
                   command=self.save_changes).pack(pady=15)
 

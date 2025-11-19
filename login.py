@@ -4,7 +4,7 @@ import sqlite3
 import landing 
 
 
-OVERRIDE_PIN = "9999" # Override PIN to return to home screen (To prevent unauthorized members from messing with the system)
+OVERRIDE_PIN = "0000" # Override PIN to return to home screen (To prevent unauthorized members from messing with the system)
 
 
 class Login:
@@ -107,13 +107,23 @@ class Login:
 
         if result:
             member_name = result[0]
+
             messagebox.showinfo("Check-In Successful", f"Welcome, {member_name}!")
-            # TODO: Add attendance logging here
+
+            self.root.destroy()
+
+            root = tk.Tk()
+            from main_page import GymInterface
+            GymInterface(root, member_name=member_name, member_username=member_id)
+            root.mainloop()
+
         else:
             messagebox.showerror("Error", "Member not found.")
 
 
-    # Return Home (Override PIN: 9999)
+
+
+    # Return Home (Override PIN: 0000)
     def return_home(self):
         pin = simpledialog.askstring("PIN Required", "Enter override PIN:", show="*")
         if pin == OVERRIDE_PIN:

@@ -1,16 +1,13 @@
 import tkinter as tk
 import login 
 
-
-
-
 class Landing:
     def __init__(self, root):
         self.root = root
-        self.root.title("Gym System - Landing")
+        self.root.title("Gym Manager")
         self.root.geometry("500x500")
 
-        tk.Label(root, text="Welcome to the Gym System", font=("Arial", 20)).pack(pady=40)
+        tk.Label(root, text="Welcome to the Gym Manager", font=("Arial", 20)).pack(pady=40)
 
         # 'Staff Login' Button
         tk.Button(

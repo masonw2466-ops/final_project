@@ -83,7 +83,6 @@ class AddWindow:
             values=["Employee", "Manager"]
         )
         self.role.pack(pady=5)
-        # Find some sort of selector for this option
 
         tk.Button(self.win, text="Save",
                   command=self.save_staff).pack(pady=5)
@@ -102,7 +101,6 @@ class AddWindow:
             messagebox.showerror("Error", "All fields must be filled out.")
             return
 
-        # For testing, just show the data (later you save to DB)
         messagebox.showinfo(
             "Staff Saved",
             f"Name: {name}\nPhone: {phone}\nEmail: {email}\nRole: {role}"
@@ -129,10 +127,10 @@ class EditWindow:
         self.staff_dropdown = ttk.Combobox(self.win)
         self.staff_dropdown.pack(pady=5)
 
-        # Load member list from DB
+        # Load member list from database
         self.load_staff_list()
 
-        # When selecting a member → load into input fields
+        # When selecting a member, load into input fields
         self.staff_dropdown.bind("<<ComboboxSelected>>", self.load_staff_data)
 
         # Editable fields
@@ -163,7 +161,7 @@ class EditWindow:
         )
         self.staff_type.pack()
 
-        # Save Button
+        # Save button
         tk.Button(self.win, text="Save Changes",
                   command=self.save_changes).pack(pady=15)
 
@@ -172,7 +170,7 @@ class EditWindow:
         cursor.execute("SELECT id, name, role FROM staff")
         rows = cursor.fetchall()
 
-        # Format:  "1 - John Smith (Premium)"
+        # Format:  "1 - Fname Lname (Premium)"
         formatted = [f"{r[0]} - {r[1]} ({r[2]})" for r in rows]
         self.staff_dropdown["values"] = formatted
 
@@ -232,7 +230,7 @@ class RemoveWindow:
         self.staff_dropdown = ttk.Combobox(self.win)
         self.staff_dropdown.pack(pady=5)
 
-        # Load member list from DB
+        # Load member list from database
         self.load_staff_list()
 
         # Remove button
