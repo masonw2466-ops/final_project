@@ -1,100 +1,125 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 import sqlite3
+import landing 
 
-staff_status = None  
+
+OVERRIDE_PIN = "9999" # Override PIN to return to home screen (To prevent unauthorized members from messing with the system)
+
 
 class Login:
-    def __init__(self, root):
+    def __init__(self, root, mode="staff"):
         self.root = root
-        self.root.title("Login")
+        self.mode = mode  # "staff" or "member"
         self.root.geometry("500x500")
 
+        # Databases
         self.staff_conn = sqlite3.connect("staff.db")
         self.staff_cursor = self.staff_conn.cursor()
 
         self.member_conn = sqlite3.connect("members.db")
         self.member_cursor = self.member_conn.cursor()
 
-        # Adds the prompt asking for ID
-        self.label_prompt_id = tk.Label(root, text="Enter Username or ID")
-        self.label_prompt_id.pack(pady=10)
+        # Set UI based on user mode
+        if self.mode == "staff":
+            self.build_staff_login()
 
-        # Adds the box to place ID
-        self.entry_id = tk.Entry(root)
-        self.entry_id.pack(pady=10)
+        elif self.mode == "member":
+            self.build_member_login()
 
-        # Adds prompt asking for passcode
-        self.label_prompt_passcode = tk.Label(root, text="Enter Passcode")
-        self.label_prompt_passcode.pack(pady=10)
-        
-        # Place passcode here
-        self.entry_passcode = tk.Entry(root)
-        self.entry_passcode.pack(pady=10)
 
-        # Submits informaiton and calls a checker
-        self.button_submit = tk.Button(root, text="Submit", command=self.check_login)
-        self.button_submit.pack(pady=10)
+    # Staff Login Mode
+    def build_staff_login(self):
+        self.root.title("Staff Login")
 
-        # Left empty to start but will display message if done wrong
-        self.label_output = tk.Label(root, text="")
-        self.label_output.pack(pady=10)
+        tk.Label(self.root, text="Staff Login", font=("Arial", 20)).pack(pady=20)
 
-    def check_login(self):
-        global staff_status
+        tk.Label(self.root, text="Enter Username").pack(pady=10)
+        self.entry_user = tk.Entry(self.root)
+        self.entry_user.pack(pady=10)
 
-        username = self.entry_id.get().strip()
-        password = self.entry_passcode.get().strip()
+        tk.Label(self.root, text="Enter Password").pack(pady=10)
+        self.entry_pass = tk.Entry(self.root, show="*")
+        self.entry_pass.pack(pady=10)
 
-        if username == "" or password == "":
-            self.label_output.config(text="Please enter both ID and password.", fg="red")
+        tk.Button(self.root, text="Login", command=self.check_staff_login).pack(pady=20)
+
+        tk.Button(self.root, text="Return Home", command=self.return_home).pack(pady=10)
+
+
+    # Member Login Mode (Check-in)
+    def build_member_login(self):
+        self.root.title("Member Check-In")
+
+        tk.Label(self.root, text="Member Check-In", font=("Arial", 20)).pack(pady=20)
+
+        tk.Label(self.root, text="Enter Member ID").pack(pady=10)
+        self.entry_member_id = tk.Entry(self.root)
+        self.entry_member_id.pack(pady=10)
+
+        tk.Button(self.root, text="Check In", command=self.check_member_login).pack(pady=20)
+
+        tk.Button(self.root, text="Return Home", command=self.return_home).pack(pady=10)
+
+
+    # Staff Login
+    def check_staff_login(self):
+        username = self.entry_user.get().strip()
+        password = self.entry_pass.get().strip()
+
+        if not username or not password:
+            messagebox.showerror("Error", "Please enter both fields.")
             return
 
-        # Check staff database
-        try:
-            self.staff_cursor.execute(
-                "SELECT role FROM staff WHERE username=? AND password=?",
-                (username, password)
-            )
-            staff_result = self.staff_cursor.fetchone()
-        except Exception as e:
-            self.label_output.config(text=f"Staff DB error: {e}", fg="red")
-            return
+        self.staff_cursor.execute(
+            "SELECT role FROM staff WHERE username=? AND password=?",
+            (username, password)
+        )
+        result = self.staff_cursor.fetchone()
 
-        if staff_result:
-            staff_status = staff_result[0]
-            messagebox.showinfo("Login Successful", f"Welcome {staff_status}!")
+        if result:
+            role = result[0]
+            messagebox.showinfo("Success", f"Welcome {role}!")
+
+            # Load the staff dashboard
+            from main_page import GymInterface
             self.root.destroy()
-
-            import main_page
             root = tk.Tk()
-            main_page.GymInterface(root, staff_status)
+            GymInterface(root, role)
             root.mainloop()
+        else:
+            messagebox.showerror("Error", "Invalid credentials.")
+
+
+    # Member Login
+    def check_member_login(self):
+        member_id = self.entry_member_id.get().strip()
+
+        if not member_id:
+            messagebox.showerror("Error", "Please enter a member ID")
             return
 
-        # Check member database
-        try:
-            self.member_cursor.execute(
-                "SELECT name FROM members WHERE username=? AND password=?",
-                (username, password)
-            )
-            member_result = self.member_cursor.fetchone()
-        except Exception as e:
-            self.label_output.config(text=f"Member DB error: {e}", fg="red")
-            return
+        self.member_cursor.execute(
+            "SELECT name FROM members WHERE id=?",
+            (member_id,)
+        )
+        result = self.member_cursor.fetchone()
 
-        if member_result:
-            member_name = member_result[0]
-            messagebox.showinfo("Login Successful", f"Welcome {member_name}!")
+        if result:
+            member_name = result[0]
+            messagebox.showinfo("Check-In Successful", f"Welcome, {member_name}!")
+            # TODO: Add attendance logging here
+        else:
+            messagebox.showerror("Error", "Member not found.")
+
+
+    # Return Home (Override PIN: 9999)
+    def return_home(self):
+        pin = simpledialog.askstring("PIN Required", "Enter override PIN:", show="*")
+        if pin == OVERRIDE_PIN:
             self.root.destroy()
-
-            # Placeholder for member portal
-            messagebox.showinfo("Member Page", "Member login successful. Member portal not yet implemented.")
-            return
-
-        self.label_output.config(text="Invalid ID or password", fg="red")
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = Login(root)
-    root.mainloop()
+            root = tk.Tk()
+            landing.Landing(root)
+            root.mainloop()
+        else:
+            messagebox.showerror("Error", "Incorrect PIN!")
