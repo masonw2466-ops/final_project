@@ -170,7 +170,7 @@ class EditWindow:
         cursor.execute("SELECT id, name, role FROM staff")
         rows = cursor.fetchall()
 
-        # Format:  "1 - Fname Lname (Premium)"
+        # Format:  "1 - Fname Lname (Role)"
         formatted = [f"{r[0]} - {r[1]} ({r[2]})" for r in rows]
         self.staff_dropdown["values"] = formatted
 

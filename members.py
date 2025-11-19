@@ -135,7 +135,7 @@ class EditWindow:
         # When selecting a member, load into input fields
         self.member_dropdown.bind("<<ComboboxSelected>>", self.load_member_data)
 
-        # Editable fields
+        # Text input fields
         tk.Label(self.win, text="Name").pack(pady=5)
         self.entry_name = tk.Entry(self.win)
         self.entry_name.pack()
@@ -172,7 +172,7 @@ class EditWindow:
         cursor.execute("SELECT id, name, membership FROM members")
         rows = cursor.fetchall()
 
-        # Format:  "1 - John Smith (Premium)"
+        # Format:  "1 - Fname Lname (Membership Type)"
         formatted = [f"{r[0]} - {r[1]} ({r[2]})" for r in rows]
         self.member_dropdown["values"] = formatted
 
