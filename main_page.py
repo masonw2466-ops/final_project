@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 import landing
 import sqlite3
 
@@ -52,6 +53,9 @@ class GymInterface:
 
         tk.Button(self.root, text="View My Membership Info",
                 command=self.open_membership_info).pack(pady=15)
+        
+        tk.Button(self.root, text="Change Membership", 
+                command=self.change_membership).pack(pady=15)
 
         tk.Button(self.root, text="View Class Schedule",
                 command=self.open_class_schedule_view).pack(pady=15)
@@ -118,6 +122,9 @@ class GymInterface:
         # Restart timeout timer when this window closes
         win.protocol("WM_DELETE_WINDOW", lambda: (win.destroy(), self.start_timeout()))
 
+    def change_membership(self):
+        self.cancel_timeout()
+        EditMembershipWindow(self)
 
     # Auto reset after member checks-in
     def member_timeout(self):
@@ -155,6 +162,51 @@ class GymInterface:
         root = tk.Tk()
         landing.Landing(root)
         root.mainloop()
+
+class EditMembershipWindow:
+    def __init__(self, main_app):
+        self.main_app = main_app
+        self.win = tk.Toplevel(main_app.root)
+        self.win.title("Edit Membership")
+        self.win.geometry("500x500")
+
+        tk.Label(self.win, text="Membership options").pack(pady=10)
+
+        #Choose the type of membership
+        tk.Label(self.win, text="Membership Type").pack(pady=5)
+        self.membership_type = ttk.Combobox(
+            self.win,
+            values=["Basic", "Premium", "VIP", "Student", "Family"]
+        )
+        self.membership_type.pack()
+
+        tk.Button(self.win, text="Save Changes",
+                  command=self.save_changes).pack(pady=15)
+        
+    def save_changes(self):
+        new_membership = self.membership_type.get()
+
+        if not new_membership:
+            messagebox.showerror("Error", "Please select a membership type.")
+            return
+
+        # Update ONLY the membership column for this user
+        conn = sqlite3.connect("members.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "UPDATE members SET membership=? WHERE id=?",
+            (new_membership, self.main_app.member_username)
+        )
+
+        conn.commit()
+        conn.close()
+
+        messagebox.showinfo("Success", "Membership type updated!")
+        self.win.destroy()
+        self.main_app.start_timeout()
+
+
 
 
 if __name__ == "__main__":
