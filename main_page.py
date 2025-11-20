@@ -59,6 +59,9 @@ class GymInterface:
 
         tk.Button(self.root, text="View Class Schedule",
                 command=self.open_class_schedule_view).pack(pady=15)
+        
+        tk.Button(self.root, text="Logout", width=20,
+                  command=self.logout).pack(pady=20)
 
         # Inactivity timer (after member check-in, goes back to default check-in screen)
         self.start_timeout()
