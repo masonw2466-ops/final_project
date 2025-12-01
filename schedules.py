@@ -1,9 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+import unittest
+from test_config import auto_tests_enabled
+
 
 class Schedules:
-    def __init__(self, root, member_mode=False, member_username=None):
+    def __init__(self, root, member_mode=False, member_username=None, run_tests=True):
         self.root = root
         self.member_mode = member_mode
         self.member_username = member_username
@@ -36,10 +39,16 @@ class Schedules:
 
         self.conn.commit()
 
+        mode = "member" if self.member_mode else "staff"
+
         if self.member_mode:
             self.build_member_view()
         else:
             self.build_staff_view()
+
+        # auto-run tests when this screen is opened (but not from tests)
+        if run_tests:
+            run_schedules_tests_for_mode(mode)
 
     # Staff tools
     def build_staff_view(self):
@@ -53,8 +62,8 @@ class Schedules:
         win.title("Class List")
 
         tree = ttk.Treeview(win, columns=("name", "instr", "day", "time", "cap"), show="headings")
-        for col, title in zip(("name","instr","day","time","cap"),
-                              ("Class","Instructor","Day","Time","Capacity")):
+        for col, title in zip(("name", "instr", "day", "time", "cap"),
+                              ("Class", "Instructor", "Day", "Time", "Capacity")):
             tree.heading(col, text=title)
         tree.pack(fill="both", expand=True)
 
@@ -110,16 +119,18 @@ class Schedules:
             tk.Label(win, text=l).pack(pady=5)
             entry.pack(pady=5)
 
-        def load():
+        def load(event=None):
             class_id = dropdown.get().split(" - ")[0]
             self.cursor.execute(
                 "SELECT class_name, instructor, day, time, capacity FROM schedules WHERE id=?",
                 (class_id,)
             )
             vals = self.cursor.fetchone()
-            for i, l in enumerate(labels):
-                entries[l].delete(0, tk.END)
-                entries[l].insert(0, vals[i])
+            if not vals:
+                return
+            for i, lab in enumerate(labels):
+                entries[lab].delete(0, tk.END)
+                entries[lab].insert(0, vals[i])
             win.class_id = class_id
 
         dropdown.bind("<<ComboboxSelected>>", load)
@@ -257,3 +268,53 @@ class Schedules:
             win.destroy()
 
         tk.Button(win, text="Leave", command=leave).pack(pady=20)
+
+
+# Tests
+
+class TestSchedules(unittest.TestCase):
+    def test_staff_view_title(self):
+        root = tk.Tk()
+        root.withdraw()
+        Schedules(root, member_mode=False, run_tests=False)
+        self.assertEqual(root.title(), "Class Schedules")
+        root.destroy()
+
+    def test_member_view_has_join_button(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Schedules(root, member_mode=True, member_username="testuser", run_tests=False)
+
+        button_texts = [
+            w.cget("text")
+            for w in app.root.winfo_children()
+            if isinstance(w, tk.Button)
+        ]
+        self.assertIn("Join a Class", button_texts)
+        root.destroy()
+
+
+def run_schedules_tests_for_mode(mode: str):
+    if not auto_tests_enabled():
+        return
+
+    loader = unittest.TestLoader()
+    test_names = []
+
+    if mode == "staff":
+        test_names.append("schedules.TestSchedules.test_staff_view_title")
+    elif mode == "member":
+        test_names.append("schedules.TestSchedules.test_member_view_has_join_button")
+
+    if not test_names:
+        return
+
+    suite = loader.loadTestsFromNames(test_names)
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    Schedules(root)
+    root.mainloop()

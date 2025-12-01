@@ -1,16 +1,23 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import sqlite3
-import landing 
+import landing
+import unittest
+from test_config import auto_tests_enabled
 
-
-OVERRIDE_PIN = "0000" # Override PIN to return to home screen (To prevent unauthorized members from messing with the system)
+# Override PIN to return to home screen (To prevent unauthorized members from messing with the system)
+OVERRIDE_PIN = "0000"  
 
 
 class Login:
-    def __init__(self, root, mode="staff"):
+    def __init__(self, root, mode="staff", run_tests=True):
+        """
+        mode: "staff" or "member"
+        run_tests: True in normal app usage, False when a unittest
+                   creates a Login instance (to avoid recursion).
+        """
         self.root = root
-        self.mode = mode  # "staff" or "member"
+        self.mode = mode
         self.root.geometry("500x500")
 
         # Databases
@@ -23,10 +30,12 @@ class Login:
         # Set UI based on user mode
         if self.mode == "staff":
             self.build_staff_login()
-
         elif self.mode == "member":
             self.build_member_login()
 
+        # auto-run tests for this mode (only in real app, not inside tests)
+        if run_tests:
+            run_login_tests_for_mode(self.mode)
 
     # Staff Login Mode
     def build_staff_login(self):
@@ -46,7 +55,6 @@ class Login:
 
         tk.Button(self.root, text="Return Home", command=self.return_home).pack(pady=10)
 
-
     # Member Login Mode (Check-in)
     def build_member_login(self):
         self.root.title("Member Check-In")
@@ -60,7 +68,6 @@ class Login:
         tk.Button(self.root, text="Check In", command=self.check_member_login).pack(pady=20)
 
         tk.Button(self.root, text="Return Home", command=self.return_home).pack(pady=10)
-
 
     # Staff Login
     def check_staff_login(self):
@@ -89,7 +96,6 @@ class Login:
             root.mainloop()
         else:
             messagebox.showerror("Error", "Invalid credentials.")
-
 
     # Member Login
     def check_member_login(self):
@@ -120,9 +126,6 @@ class Login:
         else:
             messagebox.showerror("Error", "Member not found.")
 
-
-
-
     # Return Home (Override PIN: 0000)
     def return_home(self):
         pin = simpledialog.askstring("PIN Required", "Enter override PIN:", show="*")
@@ -133,3 +136,46 @@ class Login:
             root.mainloop()
         else:
             messagebox.showerror("Error", "Incorrect PIN!")
+
+
+# Tests
+
+class TestLogin(unittest.TestCase):
+    def test_staff_mode_sets_title(self):
+        root = tk.Tk()
+        root.withdraw()  # hide test window
+        Login(root, mode="staff", run_tests=False)
+        self.assertEqual(root.title(), "Staff Login")
+        root.destroy()
+
+    def test_member_mode_sets_title(self):
+        root = tk.Tk()
+        root.withdraw()  # hide test window
+        Login(root, mode="member", run_tests=False)
+        self.assertEqual(root.title(), "Member Check-In")
+        root.destroy()
+
+
+def run_login_tests_for_mode(mode: str):
+    """
+    Run only the login tests relevant to the current mode.
+    Called automatically from Login.__init__.
+    """
+    if not auto_tests_enabled():
+        return
+
+    loader = unittest.TestLoader()
+    test_names = []
+
+    if mode == "staff":
+        test_names.append("login.TestLogin.test_staff_mode_sets_title")
+    elif mode == "member":
+        test_names.append("login.TestLogin.test_member_mode_sets_title")
+
+    if not test_names:
+        return
+
+    suite = loader.loadTestsFromNames(test_names)
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+

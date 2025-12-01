@@ -2,9 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import sqlite3
+import unittest
+from test_config import auto_tests_enabled
+
 
 class Members:
-    def __init__(self, root):
+    def __init__(self, root, run_tests=True):
         self.root = root
         self.root.title("Members")
         self.root.geometry("500x500")
@@ -36,6 +39,9 @@ class Members:
         self.button_close = tk.Button(root, text="Close", command=self.close)
         self.button_close.pack(pady=10)
 
+        # auto-run tests when this screen is opened (but not when created from tests)
+        if run_tests:
+            run_members_tests()
 
     def add_member(self):
         AddWindow(self)
@@ -75,7 +81,6 @@ class AddWindow:
             values=["Basic", "Premium", "VIP", "Student", "Family"]
         )
         self.membership_type.pack(pady=5)
-        # Find some sort of selector for this option
 
         tk.Label(self.win, text="Enter Username").pack(pady=10)
         self.entry_username = tk.Entry(self.win)
@@ -102,7 +107,6 @@ class AddWindow:
             messagebox.showerror("Error", "All fields must be filled out.")
             return
 
-        # For testing, just show the data (later you save to DB)
         messagebox.showinfo(
             "Member Saved",
             f"Name: {name}\nPhone: {phone}\nEmail: {email}\nMembership: {membership}"
@@ -115,6 +119,7 @@ class AddWindow:
         )
         conn.commit()
         self.win.destroy()
+
 
 class EditWindow:
     def __init__(self, main_app):
@@ -172,7 +177,6 @@ class EditWindow:
         cursor.execute("SELECT id, name, membership FROM members")
         rows = cursor.fetchall()
 
-        # Format:  "1 - Fname Lname (Membership Type)"
         formatted = [f"{r[0]} - {r[1]} ({r[2]})" for r in rows]
         self.member_dropdown["values"] = formatted
 
@@ -221,6 +225,7 @@ class EditWindow:
         messagebox.showinfo("Success", "Member updated successfully!")
         self.win.destroy()
 
+
 class RemoveWindow:
     def __init__(self, main_app):
         self.main_app = main_app
@@ -259,7 +264,41 @@ class RemoveWindow:
         messagebox.showinfo("Success", "Member removed successfully!")
         self.win.destroy()
 
+
+# Tests
+
+class TestMembers(unittest.TestCase):
+    def test_title_is_members(self):
+        root = tk.Tk()
+        root.withdraw()
+        Members(root, run_tests=False)
+        self.assertEqual(root.title(), "Members")
+        root.destroy()
+
+    def test_has_add_member_button(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Members(root, run_tests=False)
+
+        # look for a button with text "Add Member"
+        button_texts = [
+            w.cget("text")
+            for w in app.root.winfo_children()
+            if isinstance(w, tk.Button)
+        ]
+        self.assertIn("Add Member", button_texts)
+        root.destroy()
+
+
+def run_members_tests():
+    if not auto_tests_enabled():
+        return
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestMembers)
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+
+
 if __name__ == "__main__":
     root = tk.Tk()
-    app = Members(root)
+    Members(root)
     root.mainloop()

@@ -2,9 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import sqlite3
+import unittest
+from test_config import auto_tests_enabled
+
 
 class Staff:
-    def __init__(self, root):
+    def __init__(self, root, run_tests=True):
         self.root = root
         self.root.title("Staff")
         self.root.geometry("500x500")
@@ -36,6 +39,9 @@ class Staff:
         self.button_close = tk.Button(root, text="Close", command=self.close)
         self.button_close.pack(pady=10)
 
+        # auto-run tests when this window opens (not when created from tests)
+        if run_tests:
+            run_staff_tests()
 
     def add_staff(self):
         AddWindow(self)
@@ -114,6 +120,7 @@ class AddWindow:
         conn.commit()
         self.win.destroy()
 
+
 class EditWindow:
     def __init__(self, main_app):
         self.main_app = main_app
@@ -127,10 +134,10 @@ class EditWindow:
         self.staff_dropdown = ttk.Combobox(self.win)
         self.staff_dropdown.pack(pady=5)
 
-        # Load member list from database
+        # Load staff list from database
         self.load_staff_list()
 
-        # When selecting a member, load into input fields
+        # When selecting a staff member, load into input fields
         self.staff_dropdown.bind("<<ComboboxSelected>>", self.load_staff_data)
 
         # Editable fields
@@ -170,7 +177,6 @@ class EditWindow:
         cursor.execute("SELECT id, name, role FROM staff")
         rows = cursor.fetchall()
 
-        # Format:  "1 - Fname Lname (Role)"
         formatted = [f"{r[0]} - {r[1]} ({r[2]})" for r in rows]
         self.staff_dropdown["values"] = formatted
 
@@ -217,6 +223,7 @@ class EditWindow:
         messagebox.showinfo("Success", "Staff updated successfully!")
         self.win.destroy()
 
+
 class RemoveWindow:
     def __init__(self, main_app):
         self.main_app = main_app
@@ -230,7 +237,7 @@ class RemoveWindow:
         self.staff_dropdown = ttk.Combobox(self.win)
         self.staff_dropdown.pack(pady=5)
 
-        # Load member list from database
+        # Load staff list from database
         self.load_staff_list()
 
         # Remove button
@@ -254,6 +261,39 @@ class RemoveWindow:
         self.main_app.conn.commit()
         messagebox.showinfo("Success", "Member removed successfully!")
         self.win.destroy()
+
+
+# Tests
+
+class TestStaff(unittest.TestCase):
+    def test_title_is_staff(self):
+        root = tk.Tk()
+        root.withdraw()
+        Staff(root, run_tests=False)
+        self.assertEqual(root.title(), "Staff")
+        root.destroy()
+
+    def test_has_add_staff_button(self):
+        root = tk.Tk()
+        root.withdraw()
+        app = Staff(root, run_tests=False)
+
+        button_texts = [
+            w.cget("text")
+            for w in app.root.winfo_children()
+            if isinstance(w, tk.Button)
+        ]
+        self.assertIn("Add Staff", button_texts)
+        root.destroy()
+
+
+def run_staff_tests():
+    if not auto_tests_enabled():
+        return
+    suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestStaff)
+    runner = unittest.TextTestRunner(verbosity=2)
+    runner.run(suite)
+
 
 if __name__ == "__main__":
     root = tk.Tk()
