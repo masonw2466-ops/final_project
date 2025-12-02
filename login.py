@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import sqlite3
-import landing
+import main
 import unittest
 from test_config import auto_tests_enabled
 
