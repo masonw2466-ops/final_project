@@ -132,7 +132,7 @@ class Login:
         if pin == OVERRIDE_PIN:
             self.root.destroy()
             root = tk.Tk()
-            landing.Landing(root)
+            main.Landing(root)
             root.mainloop()
         else:
             messagebox.showerror("Error", "Incorrect PIN!")

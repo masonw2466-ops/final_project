@@ -174,7 +174,7 @@ class GymInterface:
         messagebox.showinfo("Logout Successful", "Logout Successful")
         self.root.destroy()
         root = tk.Tk()
-        landing.Landing(root)
+        main.Landing(root)
         root.mainloop()
 
 
