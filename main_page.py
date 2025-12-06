@@ -9,11 +9,6 @@ from test_config import auto_tests_enabled
 
 class GymInterface:
     def __init__(self, root, staff_status=None, member_name=None, member_username=None, run_tests=True):
-        """
-        staff_status: string like 'Employee' or 'Manager' (staff dashboard)
-        member_name: member's display name (member dashboard)
-        run_tests: False when called from unit tests to avoid recursion.
-        """
         self.root = root
         self.staff_status = staff_status
         self.member_name = member_name
@@ -30,63 +25,42 @@ class GymInterface:
             self.build_member_dashboard()
             mode = "member"
 
-        # auto-run tests when this screen is reached
         if run_tests and mode is not None:
             run_gyminterface_tests_for_mode(mode)
 
-    # Staff dashboard
     def build_staff_dashboard(self):
         self.root.title("Staff Dashboard")
 
         tk.Label(self.root, text=f"Welcome, {self.staff_status}", font=("Arial", 18)).pack(pady=20)
 
-        tk.Button(self.root, text="Manage Members", width=20,
-                  command=self.edit_member).pack(pady=10)
+        tk.Button(self.root, text="Manage Members", width=20, command=self.edit_member).pack(pady=10)
+        tk.Button(self.root, text="Manage Class Schedules", width=20, command=self.class_schedule).pack(pady=10)
+        tk.Button(self.root, text="Maintenance Logs", width=20, command=self.maintenance_logs).pack(pady=10)
 
-        tk.Button(self.root, text="Manage Class Schedules", width=20,
-                  command=self.class_schedule).pack(pady=10)
-
-        tk.Button(self.root, text="Maintenance Logs", width=20,
-                  command=self.maintenance_logs).pack(pady=10)
-
-        # Manager dashboard gets "Manage Staff Button"
         if self.staff_status == "Manager":
-            tk.Button(self.root, text="Manage Staff", width=20,
-                      command=self.manage_staff).pack(pady=10)
+            tk.Button(self.root, text="Manage Staff", width=20, command=self.manage_staff).pack(pady=10)
 
-        tk.Button(self.root, text="Logout", width=20,
-                  command=self.logout).pack(pady=20)
+        tk.Button(self.root, text="Logout", width=20, command=self.logout).pack(pady=20)
 
-    # Member dashboard
     def build_member_dashboard(self):
         self.root.title("Member Dashboard")
 
         tk.Label(self.root, text=f"Welcome, {self.member_name}!", font=("Arial", 24)).pack(pady=25)
-        tk.Label(self.root, text="You are checked in. Enjoy your workout!",
-                 font=("Arial", 14)).pack(pady=10)
+        tk.Label(self.root, text="You are checked in. Enjoy your workout!", font=("Arial", 14)).pack(pady=10)
 
-        tk.Button(self.root, text="View My Membership Info",
-                  command=self.open_membership_info).pack(pady=15)
+        tk.Button(self.root, text="View My Membership Info", command=self.open_membership_info).pack(pady=15)
+        tk.Button(self.root, text="Change Membership", command=self.change_membership).pack(pady=15)
+        tk.Button(self.root, text="View Class Schedule", command=self.open_class_schedule_view).pack(pady=15)
 
-        tk.Button(self.root, text="Change Membership",
-                  command=self.change_membership).pack(pady=15)
+        tk.Button(self.root, text="Logout", width=20, command=self.logout).pack(pady=20)
 
-        tk.Button(self.root, text="View Class Schedule",
-                  command=self.open_class_schedule_view).pack(pady=15)
-
-        tk.Button(self.root, text="Logout", width=20,
-                  command=self.logout).pack(pady=20)
-
-        # Inactivity timer (after member check-in, goes back to default check-in screen)
         self.start_timeout()
 
-    # Timeout cancel (member navigates through the software)
     def cancel_timeout(self):
         if self.timeout_id:
             self.root.after_cancel(self.timeout_id)
             self.timeout_id = None
 
-    # Restart a new timeout timer
     def start_timeout(self):
         self.cancel_timeout()
         self.timeout_id = self.root.after(7000, self.member_timeout)
@@ -119,7 +93,6 @@ class GymInterface:
             f"Renewal Date: 12/31/2025\n"
         )
 
-        # Timeout timer restarts (Member goes back to welcome screen after check-in)
         self.start_timeout()
 
     def open_class_schedule_view(self):
@@ -133,14 +106,12 @@ class GymInterface:
             member_username=self.member_username
         )
 
-        # Restart timeout timer when this window closes
         win.protocol("WM_DELETE_WINDOW", lambda: (win.destroy(), self.start_timeout()))
 
     def change_membership(self):
         self.cancel_timeout()
         EditMembershipWindow(self)
 
-    # Auto reset after member checks-in
     def member_timeout(self):
         try:
             self.root.destroy()
@@ -151,7 +122,6 @@ class GymInterface:
         Login(new, mode="member")
         new.mainloop()
 
-    # Staff functions
     def edit_member(self):
         import members
         new = tk.Toplevel(self.root)
@@ -163,7 +133,8 @@ class GymInterface:
         schedules.Schedules(new)
 
     def maintenance_logs(self):
-        messagebox.showinfo("Maintenance Logs", "Not implemented yet.")
+        new = tk.Toplevel(self.root)
+        MaintenanceLogsWindow(new, self.staff_status)
 
     def manage_staff(self):
         import staff
@@ -183,11 +154,10 @@ class EditMembershipWindow:
         self.main_app = main_app
         self.win = tk.Toplevel(main_app.root)
         self.win.title("Edit Membership")
-        self.win.geometry("500x500")
+        self.win.geometry("500x700")
 
         tk.Label(self.win, text="Membership options").pack(pady=10)
 
-        # Choose the type of membership
         tk.Label(self.win, text="Membership Type").pack(pady=5)
         self.membership_type = ttk.Combobox(
             self.win,
@@ -195,8 +165,7 @@ class EditMembershipWindow:
         )
         self.membership_type.pack()
 
-        tk.Button(self.win, text="Save Changes",
-                  command=self.save_changes).pack(pady=15)
+        tk.Button(self.win, text="Save Changes", command=self.save_changes).pack(pady=15)
 
     def save_changes(self):
         new_membership = self.membership_type.get()
@@ -205,7 +174,6 @@ class EditMembershipWindow:
             messagebox.showerror("Error", "Please select a membership type.")
             return
 
-        # Update ONLY the membership column for this user
         conn = sqlite3.connect("members.db")
         cursor = conn.cursor()
 
@@ -222,7 +190,159 @@ class EditMembershipWindow:
         self.main_app.start_timeout()
 
 
-# Tests
+class MaintenanceLogsWindow:
+    def __init__(self, root, role):
+        self.root = root
+        self.role = role
+        self.root.title("Maintenance Logs")
+        self.root.geometry("800x350")
+
+        conn = sqlite3.connect("maintenance.db")
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                equipment TEXT,
+                issue TEXT,
+                resolved INTEGER,
+                notes TEXT
+            )
+        """)
+        conn.commit()
+        conn.close()
+
+        self.tree = ttk.Treeview(self.root, columns=("equip", "issue", "resolved", "notes"), show="headings")
+        self.tree.heading("equip", text="Equipment")
+        self.tree.heading("issue", text="Issue")
+        self.tree.heading("resolved", text="Resolved")
+        self.tree.heading("notes", text="Notes")
+        self.tree.pack(fill=tk.BOTH, expand=True, pady=10)
+
+        btn_frame = tk.Frame(self.root)
+        btn_frame.pack(pady=10)
+
+        tk.Button(btn_frame, text="Add Log", command=self.add_log).grid(row=0, column=0, padx=5)
+        tk.Button(btn_frame, text="Edit Log", command=self.edit_log).grid(row=0, column=1, padx=5)
+        tk.Button(btn_frame, text="Mark Resolved", command=self.mark_resolved).grid(row=0, column=2, padx=5)
+
+        if self.role == "Manager":
+            tk.Button(btn_frame, text="Delete Log", command=self.delete_log).grid(row=0, column=3, padx=5)
+
+        self.load_logs()
+
+    def load_logs(self):
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+
+        conn = sqlite3.connect("maintenance.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, equipment, issue, resolved, notes FROM logs")
+        rows = cursor.fetchall()
+        conn.close()
+
+        for r in rows:
+            resolved_text = "Yes" if r[3] == 1 else "No"
+            self.tree.insert("", tk.END, iid=r[0], values=(r[1], r[2], resolved_text, r[4]))
+
+    def add_log(self):
+        LogEditor(self, mode="add")
+
+    def edit_log(self):
+        selected = self.tree.focus()
+        if not selected:
+            messagebox.showerror("Error", "Select a log to edit.")
+            return
+        LogEditor(self, mode="edit", log_id=selected)
+
+    def mark_resolved(self):
+        selected = self.tree.focus()
+        if not selected:
+            messagebox.showerror("Error", "Select a log.")
+            return
+
+        conn = sqlite3.connect("maintenance.db")
+        cursor = conn.cursor()
+        cursor.execute("UPDATE logs SET resolved=1 WHERE id=?", (selected,))
+        conn.commit()
+        conn.close()
+
+        self.load_logs()
+
+    def delete_log(self):
+        selected = self.tree.focus()
+        if not selected:
+            messagebox.showerror("Error", "Select a log.")
+            return
+
+        conn = sqlite3.connect("maintenance.db")
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM logs WHERE id=?", (selected,))
+        conn.commit()
+        conn.close()
+
+        self.load_logs()
+
+
+class LogEditor:
+    def __init__(self, parent, mode, log_id=None):
+        self.parent = parent
+        self.mode = mode
+        self.log_id = log_id
+
+        self.win = tk.Toplevel(parent.root)
+        self.win.title("Edit Log" if mode == "edit" else "Add Log")
+        self.win.geometry("400x300")
+
+        tk.Label(self.win, text="Equipment").pack()
+        self.entry_equipment = tk.Entry(self.win)
+        self.entry_equipment.pack()
+
+        tk.Label(self.win, text="Issue").pack()
+        self.entry_issue = tk.Entry(self.win)
+        self.entry_issue.pack()
+
+        tk.Label(self.win, text="Notes").pack()
+        self.entry_notes = tk.Entry(self.win)
+        self.entry_notes.pack()
+
+        if mode == "edit":
+            conn = sqlite3.connect("maintenance.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT equipment, issue, notes FROM logs WHERE id=?", (log_id,))
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                self.entry_equipment.insert(0, row[0])
+                self.entry_issue.insert(0, row[1])
+                self.entry_notes.insert(0, row[2])
+
+        tk.Button(self.win, text="Save", command=self.save).pack(pady=10)
+
+    def save(self):
+        equip = self.entry_equipment.get().strip()
+        issue = self.entry_issue.get().strip()
+        notes = self.entry_notes.get().strip()
+
+        if self.mode == "add":
+            conn = sqlite3.connect("maintenance.db")
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO logs (equipment, issue, resolved, notes) VALUES (?, ?, 0, ?)",
+                           (equip, issue, notes))
+            conn.commit()
+            conn.close()
+
+        else:
+            conn = sqlite3.connect("maintenance.db")
+            cursor = conn.cursor()
+            cursor.execute("UPDATE logs SET equipment=?, issue=?, notes=? WHERE id=?",
+                           (equip, issue, notes, self.log_id))
+            conn.commit()
+            conn.close()
+
+        self.win.destroy()
+        self.parent.load_logs()
+
 
 class TestGymInterface(unittest.TestCase):
     def test_staff_dashboard_title(self):
